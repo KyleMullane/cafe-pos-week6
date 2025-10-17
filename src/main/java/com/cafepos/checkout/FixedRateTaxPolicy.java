@@ -10,5 +10,7 @@ public final class FixedRateTaxPolicy implements TaxPolicy {
                         .divide(java.math.BigDecimal.valueOf(100));
         return Money.of(t);
     }
+    @Override public int getRatePercent() {
+        return percent;
+    }
 }
-
