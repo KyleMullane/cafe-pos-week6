@@ -2,7 +2,7 @@ package com.cafepos.checkout;
 
 public final class ReceiptPrinter {
 
-    public String formatString(String recipe, int qty, PricingService.PricingResult pr, TaxPolicy taxPolicy) {
+    public static String formatString(String recipe, int qty, PricingService.PricingResult pr, TaxPolicy taxPolicy) {
         StringBuilder receipt = new StringBuilder();
 
         receipt.append("Order: (").append(recipe).append(") x").append(qty).append("\n");

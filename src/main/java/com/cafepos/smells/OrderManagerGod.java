@@ -3,10 +3,26 @@ import com.cafepos.checkout.*;
 import com.cafepos.common.Money;
 import com.cafepos.factory.ProductFactory;
 import com.cafepos.catalog.Product;
+import com.cafepos.payment.PaymentStrategy;
 
 public class OrderManagerGod {
-    public static int TAX_PERCENT = 10; // Global/Static State
-    public static String LAST_DISCOUNT_CODE = null; // Global/Static State
+   // public static int TAX_PERCENT = 10; // Global/Static State
+   //public static String LAST_DISCOUNT_CODE = null; // Global/Static State
+   private ProductFactory factory;
+    private DiscountPolicy discountPolicy;
+    private TaxPolicy taxPolicy;
+    private ReceiptPrinter receiptPrinter;
+    private PaymentStrategy paymentStrategy;
+
+    public OrderManagerGod(ProductFactory factory, DiscountPolicy discountPolicy,
+                           TaxPolicy taxPolicy, ReceiptPrinter receiptPrinter,
+                           PaymentStrategy paymentStrategy) {
+        this.factory = factory;
+        this.discountPolicy = discountPolicy;
+        this.taxPolicy = taxPolicy;
+        this.receiptPrinter = receiptPrinter;
+        this.paymentStrategy = paymentStrategy;
+    }
 
     public static String process(String recipe, int qty, String
             paymentType, String discountCode, boolean printReceipt) {
@@ -32,7 +48,7 @@ public class OrderManagerGod {
         Money discount = discountPolicy.discountOf(subtotal);
 
 
-        if (discountCode != null) {
+        /* if (discountCode != null) {
             // Primitive Obsession: discountCode is a String with hardcoded values
             if (discountCode.equalsIgnoreCase("LOYAL5")) {
                 // Duplicated Logic & Feature Envy / Shotgun Surgery: inline Money and BigDecimal manipulations;
@@ -48,7 +64,7 @@ public class OrderManagerGod {
                 discount = Money.zero();
             }
             LAST_DISCOUNT_CODE = discountCode; // Global/Static State: shared mutable state
-        }
+        } */
 
         Money discounted =
                 Money.of(subtotal.asBigDecimal().subtract(discount.asBigDecimal()));
@@ -77,8 +93,6 @@ public class OrderManagerGod {
             }
         }
 
-        PricingService.PricingResult pr = new PricingService.PricingResult(subtotal, discount, tax, total);
-
        // StringBuilder receipt = new StringBuilder();
         //receipt.append("Order (").append(recipe).append(") x").append(qty).append("\n");
         //receipt.append("Subtotal: ").append(subtotal).append("\n");
@@ -97,6 +111,8 @@ public class OrderManagerGod {
 
         //return out;
     //}
+        PricingService.PricingResult pr = new PricingService.PricingResult(subtotal, discount, tax, total);
+
         ReceiptPrinter printer = new ReceiptPrinter();
         String receipt = printer.formatString(recipe, qty, pr, new FixedRateTaxPolicy(10));
 
@@ -106,5 +122,7 @@ public class OrderManagerGod {
 
         return receipt;
     }
+
+
 }
 
