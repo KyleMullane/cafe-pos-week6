@@ -1,4 +1,5 @@
 package com.cafepos.smells;
+import com.cafepos.checkout.DiscountPolicy;
 import com.cafepos.common.Money;
 import com.cafepos.factory.ProductFactory;
 import com.cafepos.catalog.Product;
@@ -27,7 +28,9 @@ public class OrderManagerGod {
         if (qty <= 0) qty = 1; // Primitive Obsession: magic number 0 quantity check and handling
 
         Money subtotal = unitPrice.multiply(qty);
-        Money discount = Money.zero();
+        DiscountPolicy discountPolicy = DiscountPolicy.fromCode(discountCode);
+        Money discount = discountPolicy.discountOf(subtotal);
+
 
         if (discountCode != null) {
             // Primitive Obsession: discountCode is a String with hardcoded values
