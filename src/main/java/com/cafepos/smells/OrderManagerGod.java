@@ -1,7 +1,5 @@
 package com.cafepos.smells;
-import com.cafepos.checkout.DiscountPolicy;
-import com.cafepos.checkout.FixedRateTaxPolicy;
-import com.cafepos.checkout.TaxPolicy;
+import com.cafepos.checkout.*;
 import com.cafepos.common.Money;
 import com.cafepos.factory.ProductFactory;
 import com.cafepos.catalog.Product;
@@ -79,23 +77,34 @@ public class OrderManagerGod {
             }
         }
 
-        StringBuilder receipt = new StringBuilder();
-        receipt.append("Order (").append(recipe).append(") x").append(qty).append("\n");
-        receipt.append("Subtotal: ").append(subtotal).append("\n");
-        if (discount.asBigDecimal().signum() > 0) {
-            receipt.append("Discount: -").append(discount).append("\n");
-        }
-        //receipt.append("Tax (").append(TAX_PERCENT).append("%): ").append(tax).append("\n");
-        receipt.append("Tax (").append(taxPolicy.getRatePercent()).append("%): ").append(tax).append("\n");
-        receipt.append("Total: ").append(total);
+        PricingService.PricingResult pr = new PricingService.PricingResult(subtotal, discount, tax, total);
 
-        String out = receipt.toString();
+       // StringBuilder receipt = new StringBuilder();
+        //receipt.append("Order (").append(recipe).append(") x").append(qty).append("\n");
+        //receipt.append("Subtotal: ").append(subtotal).append("\n");
+        //if (discount.asBigDecimal().signum() > 0) {
+        //    receipt.append("Discount: -").append(discount).append("\n");
+        //}
+        //receipt.append("Tax (").append(TAX_PERCENT).append("%): ").append(tax).append("\n");
+        //receipt.append("Tax (").append(taxPolicy.getRatePercent()).append("%): ").append(tax).append("\n");
+        //receipt.append("Total: ").append(total);
+
+        //String out = receipt.toString();
+
+        //if (printReceipt) {
+        //    System.out.println(out);
+        //}
+
+        //return out;
+    //}
+        ReceiptPrinter printer = new ReceiptPrinter();
+        String receipt = printer.formatString(recipe, qty, pr, new FixedRateTaxPolicy(10));
 
         if (printReceipt) {
-            System.out.println(out);
+            System.out.println(receipt);
         }
 
-        return out;
+        return receipt;
     }
 }
 

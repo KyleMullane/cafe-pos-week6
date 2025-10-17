@@ -2,11 +2,10 @@ package com.cafepos;
 import com.cafepos.smells.OrderManagerGod;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class Week6CharacterizationTests {
-    @org.testng.annotations.Test
-    void no_discount_cash_payment() {
+    @Test void no_discount_cash_payment() {
         String receipt = OrderManagerGod.process("ESP+SHOT+OAT", 1,
                 "CASH", "NONE", false);
         assertTrue(receipt.startsWith("Order (ESP+SHOT+OAT) x1"));
