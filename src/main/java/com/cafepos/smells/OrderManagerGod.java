@@ -1,5 +1,7 @@
 package com.cafepos.smells;
 import com.cafepos.checkout.DiscountPolicy;
+import com.cafepos.checkout.FixedRateTaxPolicy;
+import com.cafepos.checkout.TaxPolicy;
 import com.cafepos.common.Money;
 import com.cafepos.factory.ProductFactory;
 import com.cafepos.catalog.Product;
@@ -55,10 +57,12 @@ public class OrderManagerGod {
         if (discounted.asBigDecimal().signum() < 0) discounted =
                 Money.zero();
 
-        var tax = Money.of(discounted.asBigDecimal()
-                .multiply(java.math.BigDecimal.valueOf(TAX_PERCENT)) // Primitive Obsession: TAX_PERCENT primitive used here inline
-                .divide(java.math.BigDecimal.valueOf(100))); // Primitive Obsession: magic number 100 for percentage calculation
+//        var tax = Money.of(discounted.asBigDecimal()
+//                .multiply(java.math.BigDecimal.valueOf(TAX_PERCENT)) // Primitive Obsession: TAX_PERCENT primitive used here inline
+//                .divide(java.math.BigDecimal.valueOf(100))); // Primitive Obsession: magic number 100 for percentage calculation
 
+        TaxPolicy taxPolicy = new FixedRateTaxPolicy(10);
+        var tax = taxPolicy.taxOn(discounted);
         var total = discounted.add(tax);
 
         if (paymentType != null) {
@@ -81,7 +85,8 @@ public class OrderManagerGod {
         if (discount.asBigDecimal().signum() > 0) {
             receipt.append("Discount: -").append(discount).append("\n");
         }
-        receipt.append("Tax (").append(TAX_PERCENT).append("%): ").append(tax).append("\n");
+        //receipt.append("Tax (").append(TAX_PERCENT).append("%): ").append(tax).append("\n");
+        receipt.append("Tax (").append(taxPolicy.getRatePercent()).append("%): ").append(tax).append("\n");
         receipt.append("Total: ").append(total);
 
         String out = receipt.toString();
