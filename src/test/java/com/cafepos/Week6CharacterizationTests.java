@@ -1,40 +1,66 @@
 package com.cafepos;
-import com.cafepos.checkout.FixedRateTaxPolicy;
-import com.cafepos.checkout.PricingService;
-import com.cafepos.checkout.ReceiptPrinter;
+import com.cafepos.checkout.*;
+import com.cafepos.common.Money;
+import com.cafepos.factory.ProductFactory;
 import com.cafepos.payment.PaymentStrategy;
 import com.cafepos.payment.WalletPayment;
 import com.cafepos.smells.OrderManagerGod;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static com.cafepos.smells.OrderManagerGod.process;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class Week6CharacterizationTests {
-    @Test void no_discount_cash_payment() {
-        String receipt = process("ESP+SHOT+OAT", 1,
+    private ProductFactory factory;
+    private DiscountPolicy discountPolicy;
+    private TaxPolicy taxPolicy;
+    private ReceiptPrinter printer;
+    private PaymentStrategy paymentStrategy;
+    private OrderManagerGod orderManager;
+
+
+    @BeforeEach
+    void setUp() {
+        factory = new ProductFactory();
+        discountPolicy = DiscountPolicy.fromCode(null); // Default to NoDiscount
+        taxPolicy = new FixedRateTaxPolicy(10);
+        printer = new ReceiptPrinter();
+        paymentStrategy = new WalletPayment(); // Default for tests
+        orderManager = new OrderManagerGod(factory, discountPolicy, taxPolicy, printer, paymentStrategy);
+    }
+
+
+
+    @Test
+    void no_discount_cash_payment() {
+        String receipt = orderManager.process("ESP+SHOT+OAT", 1,
                 "CASH", "NONE", false);
         assertTrue(receipt.startsWith("Order (ESP+SHOT+OAT) x1"));
         assertTrue(receipt.contains("Subtotal: 3.80"));
         assertTrue(receipt.contains("Tax (10%): 0.38"));
         assertTrue(receipt.contains("Total: 4.18"));
     }
-    @Test void loyalty_discount_card_payment() {
-        String receipt = process("LAT+L", 2, "CARD",
-                "LOYAL5", false);
-// Latte (Large) base = 3.20 + 0.70 = 3.90, qty 2 => 7.80
-// 5% discount => 0.39, discounted=7.41; tax 10% => 0.74;
+    @Test
+    void loyalty_discount_card_payment() {
+        // Latte (Large) base = 3.20 + 0.70 = 3.90, qty 2 => 7.80
+        // 5% discount => 0.39, discounted=7.41; tax 10% => 0.74;
         // total=8.15;
+        discountPolicy = DiscountPolicy.fromCode("LOYAL5");
+        // Set for this test
+        orderManager = new OrderManagerGod(factory, discountPolicy, taxPolicy, printer, paymentStrategy);
+        String receipt = paymentStrategy.process("LAT+L", 2, "CARD", "LOYAL5", false);
         assertTrue(receipt.contains("Subtotal: 7.80"));
         assertTrue(receipt.contains("Discount: -0.39"));
         assertTrue(receipt.contains("Tax (10%): 0.74"));
         assertTrue(receipt.contains("Total: 8.15"));
     }
-    @Test void coupon_fixed_amount_and_qty_clamp() {
-        String receipt = process("ESP+SHOT", 0, "WALLET",
-                "COUPON1", false);
-// qty=0 clamped to 1; Espresso+SHOT = 2.50 + 0.80 = 3.30;
-        // coupon1 => -1 => 2.30; tax=0.23; total=2.53;
+    @Test
+    void coupon_fixed_amount_and_qty_clamp() {
+        // ESP+SHOT base price 2.50 + 0.80 = 3.30, qty 0 clamped to 1,
+        // coupon -1.00, tax 0.23, total 2.53
+        discountPolicy = DiscountPolicy.fromCode("COUPON1");
+        orderManager = new OrderManagerGod(factory, discountPolicy, taxPolicy, printer, paymentStrategy);
+        String receipt = orderManager.process("ESP+SHOT", 0, "WALLET", "COUPON1", false);
         assertTrue(receipt.contains("Order (ESP+SHOT) x1"));
         assertTrue(receipt.contains("Subtotal: 3.30"));
         assertTrue(receipt.contains("Discount: -1.00"));
@@ -43,23 +69,37 @@ public class Week6CharacterizationTests {
     }
     @Test
     void testReceiptPrintingExtraction() {
-        // Setup: Create ReceiptPrinter and initiate process
-        ReceiptPrinter printer = new ReceiptPrinter();
-        String output = printer.formatString("Coffee", 2, new PricingService.PricingResult(subtotal, discount, tax, total), new FixedRateTaxPolicy(10));
+        Money subtotal = Money.of(5.00);
+        Money discount = Money.of(0.50);
+        Money tax = Money.of(0.45);
+        Money total = Money.of(5.45);
+        PricingService.PricingResult pr = new PricingService.PricingResult(subtotal, discount, tax, total);
+        String output = printer.format("Coffee", 2, pr, taxPolicy);
         assertNotNull(output);
-        assertTrue(output.contains("Order: Coffee x2"));
-        // Confirm output contains formatted receipt info
+        assertTrue(output.contains("Order (Coffee) x2"));
+        assertTrue(output.contains("Subtotal: 5.00"));
+        assertTrue(output.contains("Discount: -0.50"));
+        assertTrue(output.contains("Tax (10%): 0.45"));
+        assertTrue(output.contains("Total: 5.45"));
     }
 
     @Test
     void testPaymentStrategyInjection() {
-        PaymentStrategy strategy = new WalletPayment();
-        String receipt = new OrderManagerGod(..., strategy).process("Tea", 1, "WALLET", null, false);
-        assertTrue(receipt.contains("Total")); // or other relevant assertion
+        PaymentStrategy strategy = new WalletPayment();;
+        orderManager = new OrderManagerGod(factory, discountPolicy, taxPolicy, printer, strategy);
+        String receipt = orderManager.process("Tea", 1, "WALLET", null, false);
+        assertTrue(receipt.contains("Total"));
+        assertTrue(System.out.toString().contains("[Wallet] Customer paid")); // or other relevant assertion
     }
 
     @Test
     void testConstructorInjection() {
+        ProductFactory Factory = new ProductFactory();
+        DiscountPolicy Discount = DiscountPolicy.fromCode(null);
+        TaxPolicy Tax = new FixedRateTaxPolicy(10);
+        ReceiptPrinter Printer = new ReceiptPrinter();
+        PaymentStrategy Strategy = new WalletPayment();
+
         OrderManagerGod om = new OrderManagerGod(factory, discountPolicy, taxPolicy, printer, paymentStrategy);
         String receipt = om.process("Sandwich", 1, "CARD", null, false);
         assertNotNull(receipt);
@@ -67,7 +107,10 @@ public class Week6CharacterizationTests {
 
     @Test
     void testGlobalStateRemoval() {
-        // Verify static variables no longer exist or are used
+        assertThrows(NoSuchFieldException.class, () -> {
+            OrderManagerGod.class.getDeclaredField("TAX_PERCENT");
+        });
+
         assertThrows(NoSuchFieldException.class, () -> {
             OrderManagerGod.class.getDeclaredField("LAST_DISCOUNT_CODE");
         });

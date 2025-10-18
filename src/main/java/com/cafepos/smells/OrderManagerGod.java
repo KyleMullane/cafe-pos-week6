@@ -1,14 +1,16 @@
 package com.cafepos.smells;
 import com.cafepos.checkout.*;
 import com.cafepos.common.Money;
+import com.cafepos.decorator.Priced;
 import com.cafepos.factory.ProductFactory;
 import com.cafepos.catalog.Product;
-import com.cafepos.payment.PaymentStrategy;
+import com.cafepos.order.Order;
+import com.cafepos.payment.*;
 
 public class OrderManagerGod {
    // public static int TAX_PERCENT = 10; // Global/Static State
    //public static String LAST_DISCOUNT_CODE = null; // Global/Static State
-   private ProductFactory factory;
+    private ProductFactory factory;
     private DiscountPolicy discountPolicy;
     private TaxPolicy taxPolicy;
     private ReceiptPrinter receiptPrinter;
@@ -24,17 +26,17 @@ public class OrderManagerGod {
         this.paymentStrategy = paymentStrategy;
     }
 
-    public static String process(String recipe, int qty, String
+    public String process(String recipe, int qty, String
             paymentType, String discountCode, boolean printReceipt) {
         // God Class & Long Method: This big method does creation, pricing, discounting, tax,
         // payment I/O, and printing all in one place (responsibility overload).
 
-        ProductFactory factory = new ProductFactory();
+
         Product product = factory.create(recipe);
 
         Money unitPrice;
         try {
-            var priced = product instanceof com.cafepos.decorator.Priced
+            var priced = product instanceof Priced
                     p ? p.price() : product.basePrice();
             unitPrice = priced;
         } catch (Exception e) {
@@ -44,7 +46,6 @@ public class OrderManagerGod {
         if (qty <= 0) qty = 1; // Primitive Obsession: magic number 0 quantity check and handling
 
         Money subtotal = unitPrice.multiply(qty);
-        DiscountPolicy discountPolicy = DiscountPolicy.fromCode(discountCode);
         Money discount = discountPolicy.discountOf(subtotal);
 
 
@@ -75,22 +76,13 @@ public class OrderManagerGod {
 //                .multiply(java.math.BigDecimal.valueOf(TAX_PERCENT)) // Primitive Obsession: TAX_PERCENT primitive used here inline
 //                .divide(java.math.BigDecimal.valueOf(100))); // Primitive Obsession: magic number 100 for percentage calculation
 
-        TaxPolicy taxPolicy = new FixedRateTaxPolicy(10);
+
         var tax = taxPolicy.taxOn(discounted);
         var total = discounted.add(tax);
 
         if (paymentType != null) {
-            // Primitive Obsession: paymentType string with hardcoded values
-            // Feature Envy / Shotgun Surgery risk: payment handling logic inline here, changes force edits here
-            if (paymentType.equalsIgnoreCase("CASH")) {
-                System.out.println("[Cash] Customer paid " + total + " EUR");
-            } else if (paymentType.equalsIgnoreCase("CARD")) {
-                System.out.println("[Card] Customer paid " + total + " EUR with card ****1234");
-            } else if (paymentType.equalsIgnoreCase("WALLET")) {
-                System.out.println("[Wallet] Customer paid " + total + " EUR via wallet user-wallet-789");
-            } else {
-                System.out.println("[UnknownPayment] " + total);
-            }
+            Order order = new Order(subtotal, discount, tax, total);
+            paymentStrategy.process(order, taxPolicy);
         }
 
        // StringBuilder receipt = new StringBuilder();
@@ -112,9 +104,8 @@ public class OrderManagerGod {
         //return out;
     //}
         PricingService.PricingResult pr = new PricingService.PricingResult(subtotal, discount, tax, total);
-
-        ReceiptPrinter printer = new ReceiptPrinter();
-        String receipt = printer.formatString(recipe, qty, pr, new FixedRateTaxPolicy(10));
+//        ReceiptPrinter printer = new ReceiptPrinter();
+        String receipt = receiptPrinter.format(recipe, qty, pr, taxPolicy);
 
         if (printReceipt) {
             System.out.println(receipt);

@@ -5,9 +5,15 @@ import java.math.BigDecimal;
 import java.util.*;
 
 public final class Order {
-    private final long id;
+    private long id = 0;
     private final List<LineItem> items = new ArrayList<>();
     public Order(long id) { this.id = id; }
+
+    public Order(Money subtotal, Money discount, Money tax, Money total) {
+        this.id = id;
+    }
+
+
     public long id() { return id; }
     public List<LineItem> items() { return List.copyOf(items); }
     public void addItem(LineItem li) { items.add(li); }

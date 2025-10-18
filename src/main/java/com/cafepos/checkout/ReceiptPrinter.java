@@ -16,4 +16,8 @@ public final class ReceiptPrinter {
 
         return receipt.toString();
     }
+
+    public String format(String coffee, int i, PricingService.PricingResult pr, TaxPolicy taxPolicy) {
+        return coffee;
+    }
 }

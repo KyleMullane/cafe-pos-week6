@@ -1,6 +1,7 @@
 package com.cafepos.payment;
-import com.cafepos.common.Money;
+import com.cafepos.checkout.TaxPolicy;
+import com.cafepos.order.Order;
 
 public interface PaymentStrategy {
-    void process(Money total);
+    void process(Order order, TaxPolicy taxPolicy);
 }
