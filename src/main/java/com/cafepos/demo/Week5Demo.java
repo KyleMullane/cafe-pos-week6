@@ -26,11 +26,14 @@ public final class Week5Demo {
         System.out.println("1) Espresso (€2.50)");
         System.out.println("2) Cappuccino (€3.00)");
         System.out.println("3) Latte    (€3.20)");
+        System.out.println("4) Chocolate Chip Cookie    (€1.00)");
+
         int type = scanner.nextInt(); scanner.nextLine();
         String baseCode = switch (type) {
             case 1 -> "ESP";
             case 2 -> "CAP";
             case 3 -> "LAT";
+            case 4 -> "Chocolate Chip Cookie";
             default -> throw new IllegalArgumentException("Bad input");
         };
 
