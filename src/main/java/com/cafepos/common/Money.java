@@ -21,6 +21,11 @@ public final class Money implements Comparable<Money> {
         if (other == null) throw new IllegalArgumentException("other required");
         return new Money(this.amount.add(other.amount));
     }
+    public Money subtract(Money other) {
+        if (other == null) throw new IllegalArgumentException("other required");
+        return new Money(this.amount.subtract(other.amount));
+    }
+
 
     public Money multiply(int qty) {
         if (qty <= 0) throw new IllegalArgumentException("qty must be > 0");

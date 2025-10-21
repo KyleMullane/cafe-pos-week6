@@ -4,7 +4,9 @@ import com.cafepos.common.Money;
 import com.cafepos.order.Order;
 
 public class WalletPayment implements PaymentStrategy {
-    public WalletPayment() {
+    @Override
+    public void process(Order order, TaxPolicy taxPolicy) {
+
     }
 
     @Override
@@ -13,7 +15,7 @@ public class WalletPayment implements PaymentStrategy {
     }
 
     @Override
-    public void process(Order order, TaxPolicy taxPolicy) {
-
+    public String process(String s, int i, String card, String loyal5, boolean b) {
+        return "";
     }
 }

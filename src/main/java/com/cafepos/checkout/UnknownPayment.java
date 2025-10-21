@@ -9,6 +9,11 @@ public class UnknownPayment implements PaymentStrategy {
     }
 
     @Override
+    public String process(String s, int i, String card, String loyal5, boolean b) {
+        return "";
+    }
+
+    @Override
     public void process(Order order, TaxPolicy taxPolicy) {
 
     }

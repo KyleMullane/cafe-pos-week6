@@ -16,9 +16,8 @@ public class OrderManagerGod {
     private ReceiptPrinter receiptPrinter;
     private PaymentStrategy paymentStrategy;
 
-    public OrderManagerGod(ProductFactory factory, DiscountPolicy discountPolicy,
-                           TaxPolicy taxPolicy, ReceiptPrinter receiptPrinter,
-                           PaymentStrategy paymentStrategy) {
+    public OrderManagerGod(ProductFactory factory, DiscountPolicy discountPolicy, TaxPolicy taxPolicy,
+                           ReceiptPrinter receiptPrinter, PaymentStrategy paymentStrategy) {
         this.factory = factory;
         this.discountPolicy = discountPolicy;
         this.taxPolicy = taxPolicy;
@@ -33,12 +32,14 @@ public class OrderManagerGod {
 
 
         Product product = factory.create(recipe);
-
         Money unitPrice;
         try {
-            var priced = product instanceof Priced
-                    p ? p.price() : product.basePrice();
-            unitPrice = priced;
+            if (product instanceof Priced) {
+                Priced p = (Priced) product;
+                unitPrice = p.price();
+            } else {
+                unitPrice = product.basePrice();
+            }
         } catch (Exception e) {
             unitPrice = product.basePrice();
         }

@@ -2,7 +2,7 @@ package com.cafepos.checkout;
 
 public final class ReceiptPrinter {
 
-    public static String formatString(String recipe, int qty, PricingService.PricingResult pr, TaxPolicy taxPolicy) {
+    public static String formatString(String recipe, int qty, PricingService.PricingResult pr, int taxPolicy) {
         StringBuilder receipt = new StringBuilder();
 
         receipt.append("Order: (").append(recipe).append(") x").append(qty).append("\n");
@@ -11,7 +11,7 @@ public final class ReceiptPrinter {
         if (pr.discount().asBigDecimal().signum() != 0) {
             receipt.append("Discount: -").append(pr.discount()).append("\n");
         }
-        receipt.append("Tax (").append(taxPolicy.getRatePercent()).append("%): ").append(pr.tax()).append("\n");
+        receipt.append("Tax (").append(taxPolicy).append("%): ").append(pr.tax()).append("\n");
         receipt.append("Total: ").append(pr.total()).append("\n");
 
         return receipt.toString();
