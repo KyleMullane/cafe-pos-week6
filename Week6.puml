@@ -1,0 +1,130 @@
+@startuml
+
+' Interfaces
+interface OrderObserver {
+    +updated(order: Order, eventType: String): void
+}
+interface OrderPublisher {
+    +register(o: OrderObserver): void
+    +unregister(o: OrderObserver): void
+    +notifyObservers(order: Order, eventType: String): void
+}
+interface PaymentStrategy {
+    +pay(order: Order): void
+}
+interface Catalog {
+    +add(p: Product): void
+    +findBy(id: String): Optional<Product>
+}
+interface Product {
+    +id(): String
+    +name(): String
+    +basePrice(): Money
+}
+
+' Classes
+class OrderIds {
+    +next(): long
+}
+class Order {
+    -id: long
+    -items: List<LineItem>
+    +id(): long
+    +items(): List<LineItem>
+    +add(item: LineItem): void
+    +subtotal(): Money
+    +taxAtPercent(pct: int): Money
+    +totalWithTax(pct: int): Money
+    +pay(strategy: PaymentStrategy): void
+    +register(o: OrderObserver): void
+    +unregister(o: OrderObserver): void
+    +markReady(): void
+}
+class InMemoryCatalog {
+    -store: Map<String, Product>
+}
+class LineItem {
+    -product: Product
+    -quantity: int
+    +product(): Product
+    +quantity(): int
+    +lineTotal(): Money
+}
+class ProductFactory {
+    +create(recipe: String): Product
+}
+class Money {
+    -amount: BigDecimal
+    +of(value: double): Money
+    +zero(): Money
+    +add(other: Money): Money
+    +multiply(qty: int): Money
+}
+
+abstract class ProductDecorator {
+    -base: Product
+}
+class SimpleProduct {
+    -id: String
+    -name: String
+    -basePrice: Money
+}
+class Syrup
+class SizeLarge
+class ExtraShot
+class OatMilk
+
+class CardPayment {
+    -cardNumber: String
+}
+class WalletPayment {
+    -walletId: String
+}
+class CashPayment
+
+class DeliveryDesk
+class CustomerNotifier
+class KitchenDisplay
+
+class OrderPublisherImpl
+
+class CatalogImpl
+
+' Relationships
+Order --|> OrderPublisher
+Order --> LineItem
+Order --> PaymentStrategy
+Order --> OrderObserver : notifies
+Order ..> PaymentStrategy : uses
+Order --> OrderIds
+Order o-- "items" LineItem
+InMemoryCatalog ..|> Catalog
+
+LineItem --> Product
+
+ProductFactory --> Product
+
+ProductDecorator ..|> Product
+SimpleProduct ..|> Product
+Syrup --|> ProductDecorator
+SizeLarge --|> ProductDecorator
+ExtraShot --|> ProductDecorator
+OatMilk --|> ProductDecorator
+
+' Payment strategies
+CardPayment ..|> PaymentStrategy
+WalletPayment ..|> PaymentStrategy
+CashPayment ..|> PaymentStrategy
+
+' Order Observers
+DeliveryDesk ..|> OrderObserver
+CustomerNotifier ..|> OrderObserver
+KitchenDisplay ..|> OrderObserver
+
+CardPayment --> Money
+WalletPayment --> Money
+CashPayment --> Money
+
+' OrderPublisherImpl ..|> OrderPublisher (if you have an impl)
+
+@enduml
